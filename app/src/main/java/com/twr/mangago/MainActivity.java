@@ -1,5 +1,7 @@
 package com.twr.mangago;
 
+import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -7,6 +9,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -14,6 +17,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
     WebView webView;
@@ -24,7 +29,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient(){
+            @Override
+                 public void onPageFinished(WebView view, String url) {
+                // Inject CSS when page is done loading
+                    injectCSS();
+                    super.onPageFinished(view, url);
+                 }
+             }
+        );
         webView.getSettings().setDomStorageEnabled(true);
         webView.loadUrl("https://www.mangago.me/");
         WebSettings websettings = webView.getSettings();
@@ -40,6 +53,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void injectCSS(){
+        try {
+            InputStream inputStream = getAssets().open("style.css");
+            byte[] buffer = new byte[inputStream.available()];
+            inputStream.read(buffer);
+            inputStream.close();
+            String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
+            webView.loadUrl("javascript:(function() {" +
+                    "var parent = document.getElementsByTagName('head').item(0);" +
+                    "var style = document.createElement('style');" +
+                    "style.type = 'text/css';" +
+                    // Tell the browser to BASE64-decode the string into your script !!!
+                    "style.innerHTML = window.atob('" + encoded + "');" +
+                    "parent.appendChild(style)" +
+                    "})()");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -58,18 +90,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class MywebClient extends WebViewClient {
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon){
-            super.onPageStarted(view, url, favicon);
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            return super.shouldOverrideUrlLoading(view, request);
-        }
-    }
-
     @Override
     public void onBackPressed() {
         if (webView.isFocused() && webView.canGoBack()) {
@@ -79,3 +99,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+
