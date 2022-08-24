@@ -1,19 +1,10 @@
 package com.twr.mangago;
 
-import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
-
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
