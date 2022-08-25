@@ -31,8 +31,10 @@ public class MainActivity extends AppCompatActivity {
         );
         webView.getSettings().setDomStorageEnabled(true);
         webView.loadUrl("https://www.mangago.me/");
-        WebSettings websettings = webView.getSettings();
-        websettings.setJavaScriptEnabled(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setBuiltInZoomControls(true);
+        webView.getSettings().setDisplayZoomControls(false);
+        //Hide status bar
         decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
             @Override
