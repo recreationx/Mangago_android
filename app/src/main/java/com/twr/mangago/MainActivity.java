@@ -24,14 +24,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        /*swipeRefresh = findViewById(R.id.swipeContainer);
+        swipeRefresh = findViewById(R.id.swipeContainer);
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 webView.reload();
 
             }
-        });*/
+        });
         loadWeb();
 
     }
@@ -44,13 +44,13 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setDisplayZoomControls(false);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        /*swipeRefresh.setRefreshing(true);*/
+        swipeRefresh.setRefreshing(true);
         webView.setWebViewClient(new WebViewClient() {
              @Override
              public void onPageFinished(WebView view, String url) {
                  injectCSS();
                  super.onPageFinished(view, url);
-                 /*swipeRefresh.setRefreshing(false);*/
+                 swipeRefresh.setRefreshing(false);
                  //lazy way to see if the link is at the reading page
                  char slash = '/';
                  int count = 0;
