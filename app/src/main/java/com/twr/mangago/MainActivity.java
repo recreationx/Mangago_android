@@ -2,11 +2,8 @@ package com.twr.mangago;
 
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -22,6 +19,7 @@ import java.io.InputStream;
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,10 +60,13 @@ public class MainActivity extends AppCompatActivity {
                  }
                  if (count == 8) {
                      //immersive mode when at the reading page
+
                      hideSystemBars();
+                     webView.setFitsSystemWindows(false);
                  }
                  else{
                      //exits reading page
+                     webView.setFitsSystemWindows(true);
                      showSystemBars();
                  }
              }
@@ -115,13 +116,21 @@ public class MainActivity extends AppCompatActivity {
 
    private void showSystemBars(){
        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-           WindowInsetsControllerCompat controller =
-                   ViewCompat.getWindowInsetsController(getWindow().getDecorView());
-           controller.show(WindowInsetsCompat.Type.systemBars());
+           WindowInsetsController controller = getWindow().getInsetsController();
+           if (controller != null)
+           {controller.show(WindowInsetsCompat.Type.systemBars());
+           }}
 
-       /*TO ADD SUPPORT FOR <R. CURRENTLY LAZY*/
-   }}
 
+       else{
+           getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                   | View.SYSTEM_UI_FLAG_FULLSCREEN
+                   | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                   | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                   | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                   | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+           }
+   }
     @Override
     public void onBackPressed() {
         if (webView.isFocused() && webView.canGoBack()) {
