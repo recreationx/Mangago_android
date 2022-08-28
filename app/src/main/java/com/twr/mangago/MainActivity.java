@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -15,30 +17,52 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import java.io.InputStream;
 
+
+
 public class MainActivity extends AppCompatActivity {
-    WebView webView;
-    private View decorView;
+    private WebView webView;
+    private SwipeRefreshLayout swipeRefresh;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        swipeRefresh = findViewById(R.id.swipeContainer);
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                webView.reload();
+            }
+        });
+        loadWeb();
+
+    }
+
+    public void loadWeb(){
         webView = findViewById(R.id.webview);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.loadUrl("https://www.mangago.me/");
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setBuiltInZoomControls(true);
+        webView.getSettings().setDisplayZoomControls(false);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        swipeRefresh.setRefreshing(true);
         webView.setWebViewClient(new WebViewClient() {
              @Override
              public void onPageFinished(WebView view, String url) {
                  injectCSS();
                  super.onPageFinished(view, url);
+                 swipeRefresh.setRefreshing(false);
                  //lazy way to see if the link is at the reading page
                  char slash = '/';
                  int count = 0;
                  for (int i = 0; i < url.length(); i++){
                      if (url.charAt(i) == slash) {
-                        count++;
+                         count++;
                      }
                  }
                  if (count == 8) {
                      //immersive mode when at the reading page
-                    hideSystemBars();
+                     hideSystemBars();
                  }
                  else{
                      //exits reading page
@@ -47,14 +71,8 @@ public class MainActivity extends AppCompatActivity {
              }
          }
         );
-        webView.getSettings().setDomStorageEnabled(true);
-        webView.loadUrl("https://www.mangago.me/");
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setBuiltInZoomControls(true);
-        webView.getSettings().setDisplayZoomControls(false);
-        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-
     }
+
     private void injectCSS() {
         try {
             InputStream inputStream = getAssets().open("style.css");
