@@ -12,6 +12,8 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.RelativeLayout;
+
 import java.io.InputStream;
 
 
@@ -19,7 +21,7 @@ import java.io.InputStream;
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
-
+    private RelativeLayout mainContainer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadWeb(){
+        mainContainer = findViewById(R.id.mainContainer);
         webView = findViewById(R.id.webview);
         webView.getSettings().setDomStorageEnabled(true);
         webView.loadUrl("https://www.mangago.me/");
@@ -51,29 +54,31 @@ public class MainActivity extends AppCompatActivity {
                  injectCSS();
                  super.onPageFinished(view, url);
                  swipeRefresh.setRefreshing(false);
-                 //lazy way to see if the link is at the reading page
-                 char slash = '/';
-                 int count = 0;
-                 for (int i = 0; i < url.length(); i++){
-                     if (url.charAt(i) == slash) {
-                         count++;
-                     }
-                 }
-                 if (count == 8) {
+                 showSystemBars();
+                 if (checkUrl(url)) {
                      //immersive mode when at the reading page
-
                      hideSystemBars();
-                     webView.setFitsSystemWindows(false);
+                     mainContainer.setFitsSystemWindows(false);
                  }
                  else{
-                     webView.setFitsSystemWindows(true);
                      showSystemBars();
+                     mainContainer.setFitsSystemWindows(true);
                  }
              }
          }
         );
     }
-
+    private boolean checkUrl(String url) {
+        /*Checks if the web link is a reading page*/
+        char slash = '/';
+        int count = 0;
+        for (int i = 0; i < url.length(); i++){
+            if (url.charAt(i) == slash) {
+                count++;
+            }
+        }
+        return count == 8;
+    }
     private void injectCSS() {
         try {
             InputStream inputStream = getAssets().open("style.css");
