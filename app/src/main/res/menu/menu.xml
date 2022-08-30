@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/register"
+        android:title="Register"
+        app:showAsAction="never">
+    </item>
+
+    <item android:id="@+id/signin"
+        android:title="Login"
+        app:showAsAction="never">
+    </item>
+
+    <item android:id="@+id/home"
+        android:title="Home"
+        android:icon="@drawable/home"
+        app:showAsAction="ifRoom">
+    </item>
+</menu>

@@ -1,18 +1,24 @@
 package com.twr.mangago;
 
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
+
 import androidx.appcompat.widget.Toolbar;
 
 import java.io.InputStream;
@@ -147,6 +153,29 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.register:
+                webView.loadUrl("https://www.mangago.me/home/accounts/register/");
+                return true;
+            case R.id.signin:
+                webView.loadUrl("https://www.mangago.me/home/accounts/login/");
+                return true;
+            case R.id.home:
+                webView.loadUrl("https://www.mangago.me/");
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
 
