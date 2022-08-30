@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.my_toolbar))
         swipeRefresh.setOnRefreshListener { webView.reload() }
         loadWeb()
     }
@@ -31,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     fun loadWeb() {
         webView.settings.domStorageEnabled = true
         webView.settings.javaScriptEnabled = true
-        webView.loadUrl("https://www.mangago.me/")
         webView.settings.builtInZoomControls = true
         webView.settings.displayZoomControls = false
         webView.overScrollMode = View.OVER_SCROLL_NEVER
@@ -43,14 +43,15 @@ class MainActivity : AppCompatActivity() {
                 swipeRefresh.isRefreshing = false
                 if (checkURL(url!!)) {
                     hideSystemBars()
-                    mainContainer.fitsSystemWindows = false
+                    // mainContainer.fitsSystemWindows = false
                 } else {
                     showSystemBars()
-                    mainContainer.fitsSystemWindows = true
+                    // mainContainer.fitsSystemWindows = true
                 }
             }
 
         }
+        webView.loadUrl("https://www.mangago.me/")
     }
 
     private fun injectCSS() {
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = window.insetsController
             controller?.show(WindowInsetsCompat.Type.systemBars())
+            supportActionBar!!.show()
         } else {
             window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -107,6 +109,7 @@ class MainActivity : AppCompatActivity() {
                 controller.systemBarsBehavior =
                     WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
+            supportActionBar!!.hide()
         } else {
             window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_FULLSCREEN

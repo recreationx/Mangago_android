@@ -1,3 +1,11 @@
 body{
     -webkit-tap-highlight-color: transparent;
 }
+
+.flex.flex-pack-justify.uk-navbar.vbox {
+    display: none;
+}
+
+#reader-nav {
+    display: none;
+}
