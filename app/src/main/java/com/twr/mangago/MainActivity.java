@@ -4,13 +4,9 @@ package com.twr.mangago;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.view.GestureDetectorCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.app.ActionBar;
-import android.gesture.Gesture;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -23,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
@@ -40,14 +37,14 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
     private RelativeLayout mainContainer;
-    private Toolbar toolBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
-        toolBar = (Toolbar) findViewById(R.id.toolBar);
+        Toolbar toolBar = findViewById(R.id.toolBar);
         setSupportActionBar(toolBar);
         swipeRefresh = findViewById(R.id.swipeContainer);
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -60,21 +57,21 @@ public class MainActivity extends AppCompatActivity {
             GestureDetector gestureDetector = new GestureDetector(getApplicationContext(), new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onSingleTapUp(MotionEvent e) {
-                    /*if (readingMenu.getVisibility() == View.GONE ){
-                        readingMenu.setVisibility(View.VISIBLE);
+                    /* if (toolBar.getVisibility() == View.GONE ){
+                        toolBar.setVisibility(View.VISIBLE);
                     }
                     else{
-                        readingMenu.setVisibility(View.GONE);
-                    }*/
+                        toolBar.setVisibility(View.GONE);
+                    } */
                 return super.onSingleTapUp(e);
                 }
             });
 
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (checkUrl(webView.getUrl()))
+                /* if (checkUrl(webView.getUrl()))
                 {
-                gestureDetector.onTouchEvent(motionEvent);}
+                gestureDetector.onTouchEvent(motionEvent);} */
                 return false;
             }
         });
@@ -98,29 +95,25 @@ public class MainActivity extends AppCompatActivity {
                      super.onPageFinished(view, url);
                      swipeRefresh.setRefreshing(false);
                      showSystemBars();
-                     if (checkUrl(url)) {
-                         //immersive mode when at the reading page
-                         hideSystemBars();
-                         mainContainer.setFitsSystemWindows(false);
-                     } else {
-                         showSystemBars();
-                         mainContainer.setFitsSystemWindows(true);
-                     }
+                     checkUrl(url);
                  }
              }
         );
     }
 
-    private boolean checkUrl(String url) {
-        /*Checks if the web link is a reading page*/
-        char slash = '/';
-        int count = 0;
-        for (int i = 0; i < url.length(); i++) {
-            if (url.charAt(i) == slash) {
-                count++;
-            }
-        }
-        return count == 8;
+    private void checkUrl(String url) {
+        webView.evaluateJavascript("(function() { var element = document.getElementById('reader-nav'); return element.innerHTML; })();",
+                s -> {
+                    if ( s.equals("null") || s.equals("undefined")) {
+                        Log.v("checkURL", s);
+                        showSystemBars();
+                        mainContainer.setFitsSystemWindows(true);
+                    } else {
+                        Log.v("checkURL", s);
+                        hideSystemBars();
+                        mainContainer.setFitsSystemWindows(false);
+                    }
+                });
     }
 
     private void injectCSS() {
@@ -166,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(true);
             WindowInsetsController controller = getWindow().getInsetsController();
             if (controller != null) {
                 controller.show(WindowInsetsCompat.Type.systemBars());
