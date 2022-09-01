@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
     private RelativeLayout mainContainer;
-    Boolean multipage = false;
+    Boolean reader_started = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,34 +70,61 @@ public class MainActivity extends AppCompatActivity {
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         swipeRefresh.setRefreshing(true);
         webView.setWebViewClient(new WebViewClient() {
-            @Override
-                 public void onPageFinished(WebView view, String url) {
-                     Log.d("OPEN", String.valueOf(webView.getProgress()));
-                     injectCSS();
-                     swipeRefresh.setRefreshing(false);
-                     if (webView.getProgress() == 100) {
-                         checkUrl(url);
-                     }
-                     super.onPageFinished(view, url);
-                 }
-             }
+                                     @Override
+                                     public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                                         if (fastUrl(url)) {
+                                             startReader(url);
+                                         }
+                                         super.onPageStarted(view, url, favicon);
+                                     }
+
+                                     @Override
+                                     public void onPageFinished(WebView view, String url) {
+                                         injectCSS();
+                                         swipeRefresh.setRefreshing(false);
+                                         if (webView.getProgress() == 100) {
+                                             slowUrl(url);
+                                         }
+                                         super.onPageFinished(view, url);
+                                     }
+                                 }
         );
     }
 
-    private void checkUrl(String url) {
+    private boolean fastUrl(String url) {
+        /*Checks if the web link is a reading page*/
+        char slash = '/';
+        int count = 0;
+        for (int i = 0; i < url.length(); i++){
+            if (url.charAt(i) == slash) {
+                count++;
+            }
+        }
+        return count == 8;
+    }
+
+    private void slowUrl(String url) {
         webView.evaluateJavascript("(function() { var element = document.getElementById('reader-nav'); return element.innerHTML; })();",
                 s -> {
                     if ( s.equals("null") || s.equals("undefined")) {
                         Log.v("checkURL", s);
                         mainContainer.setFitsSystemWindows(true);
                     } else {
-                        webView.goBack();
-                        Intent intent = new Intent(this, MangaReaderActivity.class);
-                        intent.putExtra("MESSAGE", url);
-                        startActivity(intent);
-
+                        if (!reader_started) {
+                            startReader(url);
+                        } else {
+                            reader_started = false;
+                        }
                     }
                 });
+    }
+
+    private void startReader(String url) {
+        reader_started = true;
+        webView.goBack();
+        Intent intent = new Intent(this, MangaReaderActivity.class);
+        intent.putExtra("MESSAGE", url);
+        startActivity(intent);
     }
 
     private void injectCSS() {
@@ -174,10 +201,3 @@ public class MainActivity extends AppCompatActivity {
     }
 
 }
-
-
-
-
-
-
-
