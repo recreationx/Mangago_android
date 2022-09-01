@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Mangago</string>
+    <string name="title_activity_manga_reader">Reader</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="multipage">Multipage</string>
+    <string name="search">Search</string>
+    <string name="register">Register</string>
+    <string name="login">Login</string>
+    <string name="home">Home</string>
+    <string name="history">History</string>
+
 </resources>

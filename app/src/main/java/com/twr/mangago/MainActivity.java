@@ -7,6 +7,8 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -54,28 +56,6 @@ public class MainActivity extends AppCompatActivity {
                 webView.reload();
             }
         });
-        webView.setOnTouchListener(new View.OnTouchListener() {
-            GestureDetector gestureDetector = new GestureDetector(getApplicationContext(), new GestureDetector.SimpleOnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    /* if (toolBar.getVisibility() == View.GONE ){
-                        toolBar.setVisibility(View.VISIBLE);
-                    }
-                    else{
-                        toolBar.setVisibility(View.GONE);
-                    } */
-                return super.onSingleTapUp(e);
-                }
-            });
-
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                /* if (checkUrl(webView.getUrl()))
-                {
-                gestureDetector.onTouchEvent(motionEvent);} */
-                return false;
-            }
-        });
         loadWeb();
     }
 
@@ -90,13 +70,15 @@ public class MainActivity extends AppCompatActivity {
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         swipeRefresh.setRefreshing(true);
         webView.setWebViewClient(new WebViewClient() {
-                 @Override
+            @Override
                  public void onPageFinished(WebView view, String url) {
+                     Log.d("OPEN", String.valueOf(webView.getProgress()));
                      injectCSS();
-                     super.onPageFinished(view, url);
                      swipeRefresh.setRefreshing(false);
-                     showSystemBars();
-                     checkUrl(url);
+                     if (webView.getProgress() == 100) {
+                         checkUrl(url);
+                     }
+                     super.onPageFinished(view, url);
                  }
              }
         );
@@ -107,18 +89,13 @@ public class MainActivity extends AppCompatActivity {
                 s -> {
                     if ( s.equals("null") || s.equals("undefined")) {
                         Log.v("checkURL", s);
-                        showSystemBars();
                         mainContainer.setFitsSystemWindows(true);
                     } else {
-                        Log.v("checkURL", s);
-                        hideSystemBars();
-                        mainContainer.setFitsSystemWindows(false);
-                        if (!multipage) {
-                            // Force multi-page to be enabled by default
-                            webView.evaluateJavascript("document.getElementById('multi_page').checked = false;" +
-                                    "document.getElementById('multi_page_form').submit();", null);
-                            multipage = true;
-                        }
+                        webView.goBack();
+                        Intent intent = new Intent(this, MangaReaderActivity.class);
+                        intent.putExtra("MESSAGE", url);
+                        startActivity(intent);
+
                     }
                 });
     }
@@ -143,44 +120,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            getWindow().setDecorFitsSystemWindows(false);
-            WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-            getSupportActionBar().hide();
-        } else {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            );
-        }
-
-    }
-
-    private void showSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            getWindow().setDecorFitsSystemWindows(true);
-            WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.show(WindowInsetsCompat.Type.systemBars());
-            }
-            getSupportActionBar().show();
-        } else {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        }
-    }
 
     @Override
     public void onBackPressed() {
