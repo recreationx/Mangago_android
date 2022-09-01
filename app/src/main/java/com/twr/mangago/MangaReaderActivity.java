@@ -25,6 +25,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.bottomappbar.BottomAppBar;
+
 import java.io.InputStream;
 
 public class MangaReaderActivity extends AppCompatActivity {
@@ -41,7 +43,7 @@ public class MangaReaderActivity extends AppCompatActivity {
         setSupportActionBar(readerBar);
         ActionBar ab = getSupportActionBar();
         ab.setDisplayHomeAsUpEnabled(true);
-
+        BottomAppBar bottomBar = findViewById(R.id.bottomAppBar);
         swipeRefresh = findViewById(R.id.readerContainer);
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -80,9 +82,11 @@ public class MangaReaderActivity extends AppCompatActivity {
                     if (getSupportActionBar().isShowing()) {
                         hideSystemBars();
                         getSupportActionBar().hide();
+                        bottomBar.performHide();
                     } else {
                         showSystemBars();
                         getSupportActionBar().show();
+                        bottomBar.performShow();
                     }
                     return super.onSingleTapUp(e);
                 }
