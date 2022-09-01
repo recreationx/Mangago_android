@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
     private RelativeLayout mainContainer;
+    Boolean multipage = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
                         Log.v("checkURL", s);
                         hideSystemBars();
                         mainContainer.setFitsSystemWindows(false);
+                        if (!multipage) {
+                            // Force multi-page to be enabled by default
+                            webView.evaluateJavascript("document.getElementById('multi_page').checked = false;" +
+                                    "document.getElementById('multi_page_form').submit();", null);
+                            multipage = true;
+                        }
                     }
                 });
     }
