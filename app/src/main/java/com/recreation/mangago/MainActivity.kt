@@ -1,123 +1,112 @@
 package com.recreation.mangago
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Base64
-import android.view.View
-import android.view.WindowInsets
-import android.view.WindowInsetsController
+import android.util.Log
+import android.view.*
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
-    val webView: WebView by lazy { findViewById(R.id.webView) }
+    private val webView: WebView by lazy { findViewById(R.id.webView) }
     val swipeRefresh: SwipeRefreshLayout by lazy { findViewById(R.id.swipeContainer) }
     val mainContainer: RelativeLayout by lazy { findViewById(R.id.mainContainer) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById(R.id.my_toolbar))
+        setSupportActionBar(findViewById(R.id.toolBar))
         swipeRefresh.setOnRefreshListener { webView.reload() }
         loadWeb()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     fun loadWeb() {
-        webView.settings.domStorageEnabled = true
-        webView.settings.javaScriptEnabled = true
-        webView.settings.builtInZoomControls = true
-        webView.settings.displayZoomControls = false
+        val webViewSettings = webView.settings
+        webViewSettings.domStorageEnabled = true
+        webViewSettings.javaScriptEnabled = true
+        webViewSettings.builtInZoomControls = true
+        webViewSettings.displayZoomControls = false
         webView.overScrollMode = View.OVER_SCROLL_NEVER
-        swipeRefresh.isRefreshing = true
-        webView.webViewClient = object: WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                injectCSS()
-                super.onPageFinished(view, url)
-                swipeRefresh.isRefreshing = false
-                if (checkURL(url!!)) {
-                    hideSystemBars()
-                    // mainContainer.fitsSystemWindows = false
-                } else {
-                    showSystemBars()
-                    // mainContainer.fitsSystemWindows = true
-                }
-            }
-
-        }
+        webView.webViewClient = CustomWebViewClient()
         webView.loadUrl("https://www.mangago.me/")
     }
 
-    private fun injectCSS() {
-        try {
-            val inputStream = assets.open("style.css")
-            val buffer = ByteArray(inputStream.available())
-            inputStream.read(buffer)
-            inputStream.close()
-            val encoded = Base64.encodeToString(buffer, Base64.NO_WRAP)
-            webView.loadUrl(
-                "javascript:(function() {" +
-                        "var parent = document.getElementsByTagName('head').item(0);" +
-                        "var style = document.createElement('style');" +
-                        "style.type = 'text/css';" +
-                        "style.innerHTML = window.atob('" + encoded + "');" +
-                        "parent.appendChild(style)" +
-                        "})()"
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
+    inner class CustomWebViewClient : WebViewClient() {
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            swipeRefresh.isRefreshing = true
+            super.onPageStarted(view, url, favicon)
         }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            injectCSS()
+            super.onPageFinished(view, url)
+            swipeRefresh.isRefreshing = false
+            checkURL(url!!)
+        }
+
+        private fun injectCSS() {
+            try {
+                val inputStream = assets.open("style.css")
+                val buffer = ByteArray(inputStream.available())
+                inputStream.read(buffer)
+                inputStream.close()
+                val encoded = Base64.encodeToString(buffer, Base64.NO_WRAP)
+                webView.loadUrl(
+                    "javascript:(function() {" +
+                            "var parent = document.getElementsByTagName('head').item(0);" +
+                            "var style = document.createElement('style');" +
+                            "style.type = 'text/css';" +
+                            "style.innerHTML = window.atob('" + encoded + "');" +
+                            "parent.appendChild(style)" +
+                            "})()"
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
     }
 
-    private fun checkURL(url: String): Boolean {
+    private fun checkURL(url: String) {
         var count = 0
         for (char in url) {
             if (char == '/') {
                 count++
             }
         }
-        return count == 8
-    }
-
-    private fun showSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val controller = window.insetsController
-            controller?.show(WindowInsetsCompat.Type.systemBars())
-            supportActionBar!!.show()
+        if (count == 8) {
+            startReader(url)
         } else {
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        }
-    }
-
-    private fun hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
-            val controller = window.insetsController
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            if (webView.progress == 100) {
+                webView.evaluateJavascript(
+                    "(function() { var element = document.getElementById('reader-nav'); return element.innerHTML; })();"
+                ) { s: String ->
+                    if (s == "null" || s == "undefined") {
+                        Log.v("NULL", "NULL")
+                    } else {
+                        startReader(url)
+                    }
+                }
             }
-            supportActionBar!!.hide()
-        } else {
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
+    }
+
+    private fun startReader(url: String) {
+        webView.goBack()
+        val intent = Intent(this, MangaReaderActivity::class.java)
+        intent.putExtra("MESSAGE", url)
+        startActivity(intent)
     }
 
     override fun onBackPressed() {
@@ -126,5 +115,46 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.menu, menu)
+        val menuItem = menu.findItem(R.id.search)
+        val searchView = menuItem.actionView as SearchView
+        searchView.queryHint = "Search mangas"
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                webView.loadUrl("https://www.mangago.me/r/l_search/?name=$query")
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                return false
+            }
+        })
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.register -> {
+                webView.loadUrl("https://www.mangago.me/home/accounts/register/")
+                return true
+            }
+            R.id.signin -> {
+                webView.loadUrl("https://www.mangago.me/home/accounts/login/")
+                return true
+            }
+            R.id.home -> {
+                webView.loadUrl("https://www.mangago.me/")
+                return true
+            }
+            R.id.history -> {
+                webView.loadUrl("https://www.mangago.me/home/history/")
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
