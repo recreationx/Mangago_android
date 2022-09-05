@@ -85,21 +85,24 @@ class MangaReaderActivity : AppCompatActivity(), NavigationView.OnNavigationItem
     inner class MyJavaScriptInterface {
         @JavascriptInterface
         fun handleHtml(html: String?) {
-            mHandler.post(Runnable {
-                val doc: Document = Jsoup.parse(html!!)
-                nextChapter =
-                    "https://www.mangago.me" + doc.select("a[class='next_page']").first()!!.attr("href")
-                previousChapter =
-                    "https://www.mangago.me" + doc.select("a[class='prev_page']").first()!!.attr("href")
-                val currentChapter: Element? =
-                    doc.select("a[class='btn btn-primary dropdown-toggle chapter btn-inverse']").first()
-                val allChapters: Element? = doc.getElementsByClass("dropdown-menu chapter").first()
-                val chapters: Elements = allChapters!!.select("a[href]")
-                if (!loadedChapters) {
+            if (!loadedChapters) {
+                loadedChapters = true
+                mHandler.post(Runnable {
+                    val doc: Document = Jsoup.parse(html!!)
+                    nextChapter =
+                        "https://www.mangago.me" + doc.select("a[class='next_page']").first()!!
+                            .attr("href")
+                    previousChapter =
+                        "https://www.mangago.me" + doc.select("a[class='prev_page']").first()!!
+                            .attr("href")
+                    val currentChapter: Element? =
+                        doc.select("a[class='btn btn-primary dropdown-toggle chapter btn-inverse']")
+                            .first()
+                    val allChapters: Element? = doc.getElementsByClass("dropdown-menu chapter").first()
+                    val chapters: Elements = allChapters!!.select("a[href]")
                     generateChapterList(chapters)
-                    loadedChapters = true
-                }
-            })
+                })
+            }
         }
     }
 
@@ -115,6 +118,7 @@ class MangaReaderActivity : AppCompatActivity(), NavigationView.OnNavigationItem
         for (chapter in chapterArray) {
             menu.add(chapter)
         }
+        menu.getItem(0).isChecked = true
     }
 
 
@@ -235,6 +239,7 @@ class MangaReaderActivity : AppCompatActivity(), NavigationView.OnNavigationItem
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        item.isChecked = true
         webView.loadUrl(chapterMap[item.title].toString())
         drawerLayout.closeDrawers()
         return true
