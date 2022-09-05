@@ -15,6 +15,7 @@ import android.widget.RelativeLayout
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.color.DynamicColors
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     val mainContainer: RelativeLayout by lazy { findViewById(R.id.mainContainer) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolBar))
@@ -85,10 +87,11 @@ class MainActivity : AppCompatActivity() {
                 count++
             }
         }
-        if (count == 8) {
-            startReader(url)
-        } else {
-            if (webView.progress == 100) {
+        if (webView.progress == 100) {
+            if (count == 8) {
+                Log.v("READER", "COUNT")
+                startReader(url)
+            } else {
                 webView.evaluateJavascript(
                     "(function() { var element = document.getElementById('reader-nav'); return element.innerHTML; })();"
                 ) { s: String ->
@@ -96,6 +99,7 @@ class MainActivity : AppCompatActivity() {
                         Log.v("NULL", "NULL")
                     } else {
                         startReader(url)
+                        Log.v("READER", "JS")
                     }
                 }
             }

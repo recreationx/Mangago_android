@@ -5,4 +5,9 @@
     <string name="login">Login</string>
     <string name="home">Home</string>
     <string name="history">History</string>
+    <string name="multipage">Multipage</string>
+    <string name="chapters">Chapters</string>
+    <string name="next">Next</string>
+    <string name="previous">Next</string>
+    <string name="title_activity_manga_reader">Reader</string>
 </resources>
