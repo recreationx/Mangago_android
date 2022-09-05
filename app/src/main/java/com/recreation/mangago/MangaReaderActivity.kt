@@ -3,27 +3,47 @@ package com.recreation.mangago
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Base64
+import android.util.Log
 import android.view.*
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.color.DynamicColors
-import java.lang.Exception
+import com.google.android.material.navigation.NavigationView
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 
-class MangaReaderActivity : AppCompatActivity() {
+
+class MangaReaderActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private val webView: WebView by lazy { findViewById(R.id.readerView) }
     private val swipeRefresh: SwipeRefreshLayout by lazy { findViewById(R.id.readerContainer) }
     private val readerBar: Toolbar by lazy { findViewById(R.id.readerBar) }
     private val bottomBar: BottomAppBar by lazy { findViewById(R.id.bottomAppBar) }
+    private val drawerLayout: DrawerLayout by lazy {findViewById(R.id.drawerLayout) }
+    val navigationView: NavigationView by lazy { findViewById(R.id.navigationView) }
+    val url: String = "";
+    var nextChapter: String = "";
+    var previousChapter: String = "";
+    val html: String = "";
+    var loadedChapters: Boolean = false;
 
+    val chapterArray = ArrayList<String>();
+    val chapterMap = HashMap<String, String>();
+    val mHandler: Handler = Handler();
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
@@ -33,6 +53,14 @@ class MangaReaderActivity : AppCompatActivity() {
         bottomBar.replaceMenu(R.menu.reader_bottom)
         bottomBar.setOnMenuItemClickListener(OnBottomMenuItemClickListener())
         swipeRefresh.setOnRefreshListener { webView.reload() }
+        navigationView.setNavigationItemSelectedListener(this)
+        val drawerToggle = ActionBarDrawerToggle(
+            this, drawerLayout, bottomBar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(drawerToggle)
+        drawerLayout.closeDrawers()
+        drawerToggle.syncState()
         loadWeb()
     }
 
@@ -46,12 +74,49 @@ class MangaReaderActivity : AppCompatActivity() {
         webViewSettings.builtInZoomControls = true
         webViewSettings.displayZoomControls = false
         webView.overScrollMode = View.OVER_SCROLL_NEVER
+        webView.addJavascriptInterface(MyJavaScriptInterface(), "HtmlHandler")
         webView.webViewClient = ReaderWebViewClient()
         webView.loadUrl(url!!)
         webView.setOnTouchListener(
             WebViewOnTouchListener()
         )
     }
+
+    inner class MyJavaScriptInterface {
+        @JavascriptInterface
+        fun handleHtml(html: String?) {
+            mHandler.post(Runnable {
+                val doc: Document = Jsoup.parse(html!!)
+                nextChapter =
+                    "https://www.mangago.me" + doc.select("a[class='next_page']").first()!!.attr("href")
+                previousChapter =
+                    "https://www.mangago.me" + doc.select("a[class='prev_page']").first()!!.attr("href")
+                val currentChapter: Element? =
+                    doc.select("a[class='btn btn-primary dropdown-toggle chapter btn-inverse']").first()
+                val allChapters: Element? = doc.getElementsByClass("dropdown-menu chapter").first()
+                val chapters: Elements = allChapters!!.select("a[href]")
+                if (!loadedChapters) {
+                    generateChapterList(chapters)
+                    loadedChapters = true
+                }
+            })
+        }
+    }
+
+    fun generateChapterList(chapters: Elements) {
+        for (chapter in chapters) {
+            val link = "https://www.mangago.me" + chapter.attr("href")
+            chapterArray.add(chapter.ownText())
+            chapterMap[chapter.ownText()] = link
+        }
+        Log.v("DDDDD", chapterArray.toString())
+        Log.v("DDDDD", chapterMap.toString())
+        val menu = navigationView.menu
+        for (chapter in chapterArray) {
+            menu.add(chapter)
+        }
+    }
+
 
     inner class WebViewOnTouchListener : View.OnTouchListener {
         private var gestureDetector =
@@ -83,6 +148,8 @@ class MangaReaderActivity : AppCompatActivity() {
                 injectCSS()
                 super.onPageFinished(view, url)
                 swipeRefresh.isRefreshing = false
+                webView.loadUrl("javascript:window.HtmlHandler.handleHtml" +
+                        "('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
             }
 
             private fun injectCSS() {
@@ -166,4 +233,13 @@ class MangaReaderActivity : AppCompatActivity() {
             return true
         }
     }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        webView.loadUrl(chapterMap[item.title].toString())
+        drawerLayout.closeDrawers()
+        return true
+    }
+
 }
+
+

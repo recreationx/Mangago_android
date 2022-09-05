@@ -10,4 +10,6 @@
     <string name="next">Next</string>
     <string name="previous">Next</string>
     <string name="title_activity_manga_reader">Reader</string>
+    <string name="navigation_drawer_open">Open</string>
+    <string name="navigation_drawer_close">Close</string>
 </resources>
